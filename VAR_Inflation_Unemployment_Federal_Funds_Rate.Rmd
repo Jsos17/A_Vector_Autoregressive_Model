@@ -1,0 +1,485 @@
+---
+title: "Time Series Analysis II Coursework"
+subtitle: "Modelling the Development of Inflation, Unemployment and Effective Federal Funds Rate with Vector Autoregression"
+author: "Juuso Silvennoinen"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  pdf_document:
+    number_sections: true
+    extra_dependencies: ["float"]
+bibliography: references.bib
+csl: harvard-educational-review.csl
+urlcolor: blue
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding,
+  output_dir = "output", output_format = "all") })
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# Uncomment if package is not installed
+# install.packages("vars")
+library(vars)
+```
+
+\newpage
+
+\tableofcontents
+
+\newpage
+
+# Introduction
+
+In this report, we build a vector autoregressive (VAR) model to describe the joint evolvement of three economic time series from the United States. The economic variables considered are inflation, unemployment and effective Federal Funds rate.
+
+The report is part of the coursework for the Master's level statistics course Time series analysis II organized at the University of Helsinki. The theoretical framework of VAR models was provided in the course lectures by Leena Kalliovirta. Additionally, two separate lecture notes have provided further theoretical background for this report [@Saikkonen2012; @Kauppi2016].
+
+The R software package [*vars*](https://cran.r-project.org/web/packages/vars/vars.pdf) [@Pfaff2008book; @Pfaff2008article] was used to implement the modelling and analysis in practice. In addition to the lectures and course material, the comprehensive tutorials *VAR, SVAR and SVEC Models: Implementation Within R Package vars* [@Pfaff2008article] and *Using the vars package* [@Pfaff2007] have guided the implementation of the VAR modelling and the content of this report. The actual report was written using R Markdown [@Allaireetal2020; @Xieetal2018]. 
+
+# Preliminary Analysis of Data
+
+## Description of Data and Data Preparation \label{description of data}
+
+The original inflation and unemployment time series are reported quarterly, but the effective Federal Funds rate time series is reported monthly. Thus, we aggregate the Federal Funds monthly data to quarterly form by calculating the average value of the months spanning any given quarter and then assigning that value to the given quarter. Additionally, the three time series are not seasonally adjusted. Therefore, we need to take this into account, when we build our vector autoregressive model.
+
+We analyse the time span from the first quarter of 1960 (Q1 1960) to the third quarter of 2015 (Q3 2015). For some time series considered, we have more observations than the aforementioned time period. However, we have observations from all three time series between Q1 1960 and Q3 2015, and therefore we make this time restriction.
+
+On the website of the Federal Reserve Bank of St. Louis, there is a interactive time series graph, where one can observe [the unemployment data](https://fred.stlouisfed.org/series/LRUN64TTUSQ156N) [@oecd2020] and [the effective Federal Funds rate data](https://fred.stlouisfed.org/series/FEDFUNDS) [@fred2020]. From this interactive graph, one can clearly see that references are made to quarters and months in the two respective time series. However, when the data is downloaded, references to quarter and month are made by the first day of the respective time period. This is somewhat misleading. As an example, one would assume that data observed on January 1, 1960, would refer to the last quarter of the year 1959. But in all likelihood the observation date actually refers to the first quarter of the year 1960. In our data analysis, we assume that data observed on the first day of the month refers to the quarter or month *starting* on that date.
+
+## Exploratory Data Analysis
+
+We first examine the summary statistics describing the three time series considered:
+
+```{r data preparation, echo=FALSE}
+inflation <-read.csv("Inflation_1959_Q4-2015_Q4.csv")
+unemployed <- read.csv("Unemployment_1960_Q1-2015_Q4.csv")
+fedfunds <- read.csv("Federal_Funds_Rate_1959_12-2015_11.csv")
+
+inflation <- subset(inflation, select=c("QUARTER", "INFLATION"))
+inflation <- inflation[2:(nrow(inflation) - 1),]
+unemployed <- unemployed[1:(nrow(unemployed) - 1),]
+fedfunds <- fedfunds[2:670,]
+
+inflation.ts <- ts(inflation$INFLATION, start=c(1960,1), frequency=4)
+unemployed.ts <- ts(unemployed$LRUN64TTUSQ156N, start=c(1960,1), frequency=4)
+fedfunds.ts <- aggregate(ts(fedfunds$FEDFUNDS, start=c(1960,1), frequency=12), FUN=mean, nfrequency=4)
+
+multivariate.ts <- ts.union(inflation.ts, unemployed.ts, fedfunds.ts)
+summary(multivariate.ts)
+```
+
+The summary statistics do not reveal anything unusual. However, all of the three time series attain values in a similar range. Therefore, we can plot them all together in a single plot. Consequently, we can perhaps attain a better understanding of how the three time series evolve together. This plot can be seen in Figure \ref{fig:single-plot-time-series}. From the joint plot we can see that inflation and Federal Funds rate seem to share similarities in their evolvement process. However, it is very difficult to draw more detailed conclusions from this plot. The three times series are also plotted individually in Figure \ref{fig:time-series-plots}. In particular, the unemployment time series seems to exhibit some seasonal variation.
+
+``` {r joint time series plot, echo=FALSE, fig.cap="\\label{fig:single-plot-time-series}Joint time series plot"}
+minimum <- min(inflation.ts, unemployed.ts, fedfunds.ts)
+maximum <- max(inflation.ts, unemployed.ts, fedfunds.ts)
+plot(inflation.ts, col="blue", ylim=c(minimum, maximum), ylab="Percent")
+lines(unemployed.ts, col="red")
+lines(fedfunds.ts, col="darkgreen")
+legend("topright", legend=c("Inflation (%)", "Unemployment (%)", "Fed Funds Rate (%)"), fill=c("blue", "red", "darkgreen"))
+```
+
+``` {r time series plots, echo=FALSE, fig.height=9, fig.width=9, fig.cap="\\label{fig:time-series-plots}Time series plots"}
+par(mfrow=c(3,1))
+plot(inflation.ts, col="blue", main="US Inflation", ylab="Inflation (%)")
+plot(unemployed.ts, col="red", main="Unemployment Percentage in the United States (Ages 15 to 64)", ylab="Unemployed (%)")
+plot(fedfunds.ts, col="darkgreen", main="Effective Federal Funds Rate", ylab="Fed Funds Rate (%)")
+```
+
+We next examine the empirical autocorrelation and cross-correlation plots for the three time series. We consider time lags from 0 to 24, in years this corresponds to a maximum lag of 6 years. All the different autocorrelations and cross-correlations can be seen in Figure \ref{fig:auto-cross-correlations}. All three time series exhibit strong positive autocorrelation. There appears to be major cross-correlation between all three time series as well. However, the presence of strong autocorrelation in each individual time series somewhat dilutes the value of any inference we can draw from the cross-correlation plots.
+
+```{r correlation matrix, echo=FALSE, fig.height=9, fig.width=9, fig.cap="\\label{fig:auto-cross-correlations}Auto- and cross-correlations up to 24 lags"}
+# Note one lag is one quarter, four lags is one year
+max_lag <- 24
+x <- "Time (years)"
+par(mfrow=c(3, 3), cex.main=1.1)
+acf(inflation.ts, lag.max = max_lag, type="correlation", main="Inflation", xlab=x)
+ccf(inflation.ts, unemployed.ts, lag.max = max_lag, type="correlation", main="Inflation, Unemployment", ylab="CCF", xlab=x)
+ccf(inflation.ts, fedfunds.ts, lag.max = max_lag, type="correlation", main="Inflation, Fed Funds Rate", ylab="CCF", xlab=x)
+ccf(unemployed.ts, inflation.ts, lag.max = max_lag, type="correlation", main="Unemployment, Inflation", ylab="CCF", xlab=x)
+acf(unemployed.ts, lag.max = max_lag, type="correlation", main="Unemployment", xlab=x)
+ccf(unemployed.ts, fedfunds.ts, lag.max = max_lag, type="correlation", main="Unemployment, Fed Funds Rate", ylab="CCF", xlab=x)
+ccf(fedfunds.ts, inflation.ts, lag.max = max_lag, type="correlation", main="Fed Funds Rate, Inflation", ylab="CCF", xlab=x)
+ccf(fedfunds.ts, unemployed.ts, lag.max = max_lag, type="correlation", main="Fed Funds Rate, Unemployment", ylab="CCF", xlab=x)
+acf(fedfunds.ts, lag.max = max_lag, type="correlation", main="Fed Funds Rate", xlab=x)
+```
+
+# VAR Model
+
+In this section we build an unrestricted VAR model and then also consider a VAR model with parameter restrictions. We use information criteria to select the appropriate lag order for the unrestricted model. Once the appropriate lag order has been selected, we consider estimating a VAR model with the chosen lag: First, without parameter restrictions and second, with parameter restrictions. After both unrestricted and restricted models are estimated, we consider model diagnostics for the unrestricted model by employing residual diagnostics.  
+
+## Model Selection Using Information Criteria
+
+We will use information criteria to select the lag order of our unrestricted VAR model. The vars package provides the function *VARselect* for this purpose. Since the original data is not seasonally adjusted and we are dealing with macroeconomic data, we add seasonal dummies. The *VARselect* function computes the lag orders recommended by each information criteria:
+
+```{r}
+information_criteria <- VARselect(multivariate.ts, lag.max=16, type="const", season=4)
+information_criteria$selection
+```
+
+From the results we can see that the most stringent information criteria SC, i.e. the Schwartz information criteria (BIC in the lecture materials), recommends lag order of two. We choose our lag order to be two, because we want to estimate a model with as few parameters as possible. More detailed calculations for different information criteria can be seen in Appendix \ref{dummies}.
+
+In Appendix \ref{no dummies}, we see what would have been the suggested lag order, if seasonal dummies were not used. In that case, we would have estimated a VAR(6) model, when using the SC criterion. Thus, the addition of seasonal dummies dramatically reduces lag order of our estimated model.
+
+## VAR(2) Model Estimation \label{Model}
+
+### Unrestricted Model \label{unrestricted}
+
+The estimation of the unrestricted VAR(2) model is straightforward with the vars package:
+
+```{r model estimation}
+var <- VAR(multivariate.ts, p=2, type="const", season=4)
+```
+
+```{r coefs, include=FALSE}
+A <- Acoef(var)
+options(digits=3)
+```
+
+The summary of the estimation results can be seen in Appendix \ref{summary unrestricted}. 
+
+At time \(t\), we denote inflation  with \( i_{t} \), unemployment with \( u_{t} \) and effective Federal Funds rate with \( r_{t} \). Then, our estimated unrestricted VAR(2) model is
+\begin{equation}
+\begin{bmatrix}
+i_{t} \\
+u_{t} \\
+r_{t}
+\end{bmatrix} = 
+\begin{bmatrix}
+`r A[[1]][1,1]` & `r A[[1]][1,2]` & `r A[[1]][1,3]` \\
+`r A[[1]][2,1]` & `r A[[1]][2,2]` & `r A[[1]][2,3]` \\
+`r A[[1]][3,1]` & `r A[[1]][3,2]` & `r A[[1]][3,3]`
+\end{bmatrix} 
+\begin{bmatrix}
+i_{t-1} \\
+u_{t-1} \\
+r_{t-1}
+\end{bmatrix} +
+\begin{bmatrix}
+`r A[[2]][1,1]` & `r A[[2]][1,2]` & `r A[[2]][1,3]` \\
+`r A[[2]][2,1]` & `r A[[2]][2,2]` & `r A[[2]][2,3]` \\
+`r A[[2]][3,1]` & `r A[[2]][3,2]` & `r A[[2]][3,3]`
+\end{bmatrix}
+\begin{bmatrix}
+i_{t-2} \\
+u_{t-2} \\
+r_{t-2}
+\end{bmatrix} + {CD}_{t} +
+\begin{bmatrix}
+\hat{\varepsilon}_{i,t} \\
+\hat{\varepsilon}_{u,t} \\
+\hat{\varepsilon}_{r,t}
+\end{bmatrix},
+\end{equation} where \( CD_{t} \) is the matrix which contains the constant term and the seasonal dummy constant for each component of the vector \( (i_{t}, u_{t}, r_{t}) \) and \( (\hat{\varepsilon}_{i,t}, \hat{\varepsilon}_{u,t}, \hat{\varepsilon}_{r,t}) \) is the residual vector. In the above result, the individual coefficients are rounded to improve the readability of the result.
+
+```{r, echo=FALSE, include=FALSE}
+options(digits=7)
+```
+
+We next examine the stationarity of the estimated VAR(2) model. If \( \boldsymbol{A} \) is the matrix in the VAR(1) representation of our estimated VAR(2) model, then the moduli for all of the eigenvalues of the matrix \( \boldsymbol{A} \) can be examined with the function *roots*:
+
+```{r eigenvalues}
+moduli <- roots(var, modulus=TRUE)
+moduli
+```
+
+The largest modulus of the eigenvalues is `r moduli[1]`. This value is strictly smaller than \( 1 \). Thus, we arrive at the conclusion that our VAR(2) model is stationary.
+
+### Restricted Model \label{restricted}
+
+We next consider estimating a restricted VAR(2) model, where some of the coefficients are restricted to zero. The vars package provides a function *restrict* for this purpose. As explained in the tutorial *Using the vars package* on page 7 [@Pfaff2007], the *restrict* function re-estimates each equation as long as there are t-values which are in absolute value below the desired threshold value. We are going to use the provided default value for the threshold i.e.\ the value 2.0: 
+
+```{r restricted model}
+var.restricted <- restrict(var, method="ser", thresh = 2.0)
+```
+
+```{r coefs restricted, include=FALSE}
+A_r <- Acoef(var.restricted)
+options(digits=3)
+```
+
+The results of the restricted estimation are summarized in Appendix \ref{summary restricted}. We obtain the restricted VAR(2) model
+\begin{equation}
+\begin{bmatrix}
+i_{t} \\
+u_{t} \\
+r_{t}
+\end{bmatrix} = 
+\begin{bmatrix}
+`r A_r[[1]][1,1]` & `r A_r[[1]][1,2]` & `r A_r[[1]][1,3]` \\
+`r A_r[[1]][2,1]` & `r A_r[[1]][2,2]` & `r A_r[[1]][2,3]` \\
+`r A_r[[1]][3,1]` & `r A_r[[1]][3,2]` & `r A_r[[1]][3,3]`
+\end{bmatrix} 
+\begin{bmatrix}
+i_{t-1} \\
+u_{t-1} \\
+r_{t-1}
+\end{bmatrix} +
+\begin{bmatrix}
+`r A_r[[2]][1,1]` & `r A_r[[2]][1,2]` & `r A_r[[2]][1,3]` \\
+`r A_r[[2]][2,1]` & `r A_r[[2]][2,2]` & `r A_r[[2]][2,3]` \\
+`r A_r[[2]][3,1]` & `r A_r[[2]][3,2]` & `r A_r[[2]][3,3]`
+\end{bmatrix}
+\begin{bmatrix}
+i_{t-2} \\
+u_{t-2} \\
+r_{t-2}
+\end{bmatrix} + {CDR}_{t} +
+\begin{bmatrix}
+\hat{\varepsilon}_{i,t}^{(R)} \\
+\hat{\varepsilon}_{u,t}^{(R)} \\
+\hat{\varepsilon}_{r,t}^{(R)}
+\end{bmatrix},
+\end{equation} where \( CDR_{t} \) is the matrix containing the constant term and seasonal dummy constants for each component of the vector \( (i_{t}, u_{t}, r_{t}) \) in the restricted model and \( (\hat{\varepsilon}_{i,t}^{(R)}, \hat{\varepsilon}_{u,t}^{(R)}, \hat{\varepsilon}_{r,t}^{(R)}) \) is the residual vector for the restricted model. Note that \( CDR_{t} \)  is different from the \( CD_{t} \) matrix, since all of the constants and some seasonal dummy constants were restricted to zero, as can be seen in Appendix \ref{summary restricted}.
+
+We denote by \( \boldsymbol{A}_{restricted} \) the matrix  in the VAR(1) representation of the restricted VAR(2) model. The moduli for all of the eigenvalues of matrix \( \boldsymbol{A}_{restricted} \) are:
+
+```{r eigen restricted, echo=FALSE}
+options(digits=7)
+moduli2 <- roots(var.restricted, modulus=TRUE)
+moduli2
+```
+
+The largest value is very close to one. This raises the possibility that our restricted VAR(2) model might not be stationary, since **the estimated value** for the largest modulus of the eigenvalues is so close to \( 1 \). However, we decide to continue with the assumption that our restricted VAR(2) model is stationary.
+
+## Diagnostic Checking of the Unrestricted Model Using Residual Diagnostics \label{residual diagnostics}
+
+In this section we evaluate the estimated unrestricted VAR(2) model using residual diagnostics. We first plot the residual series and the autocorrelation function for the residuals. The vars package provides handy functionality for this purpose. In Figure \ref{fig:inflation-diagnostics}, we see the residuals for inflation time series. There seems to be some indication of the variance not being constant. Additionally, there is significant autocorrelation for some lags. In Figure \ref{fig:unemployment-diagnostics}, the residuals of the unemployment times series are plotted. We arrive at similar conclusions than in the case of the residuals for the inflation time series. In Figure \ref{fig:fedfunds-diagnostics}, the residuals are plotted for the effective Federal Funds rate time series. Again, similar conclusions as before can be drawn. Our three plots suggest that we should conduct various tests for the residuals. 
+
+```{r, echo=FALSE,fig.height=7, fig.width=9, fig.cap="\\label{fig:inflation-diagnostics}Diagnostic plots for residuals of inflation time series"}
+use_lag <- 24
+plot(var, names="inflation.ts", lag.acf=use_lag, lag.pacf=use_lag)
+```
+
+```{r, echo=FALSE, fig.height=7, fig.width=9, fig.cap="\\label{fig:unemployment-diagnostics}Diagnostic plots for residuals of unemployment time series"}
+plot(var, names="unemployed.ts", lag.acf=use_lag, lag.pacf=use_lag)
+```
+
+```{r, echo=FALSE, fig.height=7, fig.width=9, fig.cap="\\label{fig:fedfunds-diagnostics}Diagnostic plots for residuals of effective Federal Funds rate time series"}
+plot(var, names="fedfunds.ts", lag.acf=use_lag, lag.pacf=use_lag)
+```
+
+### Tests for Serial Correlation of Errors \label{serial-correlation}
+
+We first test the null hypothesis that the error terms **are not serially correlated** by using the Portmanteau test. The first version of the test relies on the fact that the test statistic is asymptotically chi-squared distributed:
+
+```{r portmanteau test asymptotic}
+serial.test(var, lags.pt=16, type="PT.asymptotic")
+```
+
+The second version of the Portmanteau test adjusts for the possibility that our sample is too small or that our chosen lag size of 16 is not sufficiently large:
+
+```{r portmanteau test adjusted}
+serial.test(var, lags.pt=16, type="PT.adjusted")
+```
+
+Based on the results of both tests, we have to reject the null hypothesis for any sensible significance levels. Hence, there appears to be serial correlation present between at least some of the error process components.
+
+### Tests for Multivariate Normality of Residuals
+
+We now test whether the residuals are multivariate normally distributed. The null hypothesis is that the joint distribution of the residuals is a multinormal distribution. We obtain the following results for the multivariate Jarque-Bera test and for the multivariate skewness and kurtosis tests:
+
+```{r normality, echo=FALSE}
+normality.test(var, multivariate.only=TRUE)
+```
+
+For any sensible significance level, we have to reject the null hypothesis of the residuals being multivariate normally distributed.
+
+### Tests for Autoregressive Conditional Heteroscedasticity
+
+In the ARCH-LM test, our null hypothesis is that there is no autoregressive conditional heteroscedasticity (ARCH) in the residuals [@Lutkepohletal2004, page 130]. With the vars package we can calculate the ARCH test statistics for different lags:
+
+```{r heteroscedasticity}
+arch.test(var, lags.multi=1, multivariate.only=TRUE)
+arch.test(var, lags.multi=2, multivariate.only=TRUE)
+arch.test(var, lags.multi=3, multivariate.only=TRUE)
+arch.test(var, lags.multi=4, multivariate.only=TRUE)
+arch.test(var, lags.multi=5, multivariate.only=TRUE)
+arch.test(var, lags.multi=10, multivariate.only=TRUE)
+```
+
+Clearly, we have to reject the null hypothesis for any sensible significance levels. Therefore, we conclude that there is some ARCH in the residuals of our unrestricted VAR(2) model.
+
+### Summary of Residual Diagnostics
+
+Based on residual diagnostics, we have strong reason to believe that the error process is serially correlated. In a VAR(p) model, we assume that the error terms are independent and identically distributed. Due to likely serial correlation of the error process, the indepence assumption is particularly in serious doubt.
+
+# Hypothesis Testing
+
+## Testing Restrictions Based on the Analysis from the English Lecture Material \label{test English}
+
+In the English lecture material *Financial Time Series Econometrics: Part 2: Multivariate and Nonstationary Time Series* [@Kauppi2016], inflation, unemployment and effective Federal Funds rate data was also analysed and VAR models were built to describe the dynamics of the three respective time series. However, the inflation data was different. Additionally, there is reason to believe that the unemployment data used in the English lecture material is seasonally adjusted, since its time series plot looks distinctly smooth.
+
+In the English lecture material in the section considering Granger causality, a restricted VAR(2) model is proposed based on lack of Granger causality. It was proposed that unemployment does not Granger cause inflation, effective Federal Funds rate does not Granger cause inflation and unemployment does not Granger cause effective Federal Funds rate. The corresponding restrictions to zero were placed on coefficients \( a_{12,k}, a_{13,k} \text{ and } a_{32,k} \) of the coefficient matrices \( A_{k} \) for \( k \in \{ 1,2 \} \). Thus, our null hypothesis is \[ H_{0} : \begin{cases}a_{12,k} = 0 \\ a_{13,k} = 0 \\ a_{32,k} = 0 \end{cases}, \text{ for } k \in \{ 1, 2 \}. \]
+
+With the vars package we first estimate the model with these restrictions:
+
+```{r hypothesis}
+restrictions <- matrix(c(1, 0, 0, 1, 0, 0, 1, 1, 1, 1,
+                         1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                         1, 0, 1, 1, 0, 1, 1, 1, 1, 1), nrow=3, byrow=TRUE)
+var.hypothesis <- restrict(var, method="manual", resmat=restrictions)
+```
+
+In Appendix \ref{restrictions}, we can see that the restrictions were implemented as intended.
+
+We now use the likelihood ratio to test the null hypothesis. The likelihood ratio \[ LR = 2[l(\hat{\pi}, \hat{\Omega})-l(\tilde{\pi}, \tilde{\Omega})] \] is asymptotically \( \chi_{q}^{2} \)-distributed, where \( q \) is the amount of restrictions, \( l \) is the log-likelihood function and \( l(\hat{\pi}, \hat{\Omega}) \) and \( l(\tilde{\pi}, \tilde{\Omega}) \) are the maximum values of the log-likelihood for the unrestricted and restricted models, respectively.
+
+The vars package provides the function *logLik*. We get the following results for our unrestricted model and for the model under the null hypotesis restrictions:
+
+```{r}
+log_unrestricted <- logLik(var)
+log_hypothesis <- logLik(var.hypothesis)
+log_unrestricted
+log_unrestricted[1]
+log_hypothesis
+log_hypothesis[1]
+```
+
+According to the [documentation of the vars package](https://cran.r-project.org/web/packages/vars/vars.pdf), the *logLik* function returns the log-likelihood of the model. We assume that this means the maximum value of the log-likelihood function. A look at the code of the function [*logLik*](https://github.com/cran/vars/blob/master/R/logLik.varest.R) seems to confirm this assumption. With this assumption, we can now calculate the value of the likelihood ratio test.
+
+In this case the \( LR \) test statistic is asymptotically \( \chi_{6}^{2} \)-distributed. Hence, we obtain the p-value for the likelihood ratio test:
+
+```{r}
+LR <- 2*(log_unrestricted[1]-log_hypothesis[1])
+LR
+p_value <- pchisq(LR, df=6, lower.tail=FALSE)
+p_value
+```
+
+Since the p-value is `r p_value`, we have to reject the null hypothesis for all sensible significance levels. Thus, we arrive at different conclusions than the English lecture material. One possible explanation might be the fact that we have different inflation data than the English lecture material.
+
+## Testing the Restricted VAR(2) Model Estimated in Section \ref{restricted}
+
+In this section, we conduct a likelihood ratio test for the restricted VAR(2) model estimated in section \ref{restricted}. The following coefficients were restricted to zero:
+
+```{r}
+var.restricted$restrictions
+```
+
+In total 14 coefficients were restricted to zero. Thus the \( LR \) test statistic is asymptotically \( \chi_{14}^{2} \)-distributed. Our null hypothesis is that those 14 coefficients are zero. We obtain the following results:
+
+```{r}
+log_restricted <- logLik(var.restricted)
+likelihood_ratio <- 2*(log_unrestricted[1]-log_restricted[1])
+likelihood_ratio
+p_value2 <- pchisq(likelihood_ratio, df=14, lower.tail=FALSE)
+p_value2
+```
+
+We obtain the p-value of `r p_value2`. Thus, for significance levels of 5 % and lower, we **do not reject** the null hypothesis. Therefore, in light of the likelihood ratio test, the restricted VAR(2) model seems to make sense.
+
+\clearpage
+
+# Granger Causality
+
+Within the unrestricted VAR(2) model, we will test for the lack of Granger causality between all possible partitions of the vector \( (i_{t}, u_{t}, r_{t}) \). We obtain the following results:
+
+```{r granger causality, echo=FALSE}
+c1 <- causality(var, cause=c("inflation.ts", "unemployed.ts"))
+c2 <- causality(var, cause=c("inflation.ts", "fedfunds.ts"))
+c3 <- causality(var, cause=c("unemployed.ts", "fedfunds.ts"))
+
+c4 <- causality(var, cause=c("inflation.ts"))
+c5 <- causality(var, cause=c("unemployed.ts"))
+c6 <- causality(var, cause=c("fedfunds.ts"))
+c1$Granger
+c2$Granger
+c3$Granger
+c4$Granger
+c5$Granger
+c6$Granger
+```
+
+If we use significance level of 5 %, then we would have Granger causality between all possible partitions of the vector  \( (i_{t}, u_{t}, r_{t}) \). Even for significance level of 1 %, we can only say that the effective Federal Funds rate does not Granger cause inflation **and** unemployment, but all other null hypotheses are still rejected. Based on this analysis, we do not seem to have great justification to say that there is an absence of Granger causality between any partitions of the vector \( (i_{t}, u_{t}, r_{t}) \).
+
+# Impulse Response Analysis
+
+Our estimation results for the unrestricted and restricted VAR(2) models suggest that the covariance matrix of the error process is not diagonal i.e.\ the there is instantaneous correlation between the error process components (see Appendix \ref{summary unrestricted} and Appendix \ref{summary restricted}). Therefore, we use orthogonal impulse responses to better capture the effect of an impulse in an individual component of the error process. We will examine the orthogonal impulse responses for 60 lags ahead. In other words, we examine the effect of a shock in one of the components of the process \( (i_{t}, u_{t}, r_{t}) \) for the 15 years following the shock.
+
+The orthogonal impulse responses for the unrestricted model are plotted in Figure \ref{fig:irf-unrestricted}. For shocks in inflation, the effect initially intensifies, but then gradually fades until it has no impact or very little impact after 15 years. For shocks in unemployment, the effect of the shock is no longer felt after 15 years. For shocks in the effective Federal Funds rate, the effect is somewhat similar to an inflation shock.
+
+```{r irf unrestricted, echo=FALSE, fig.height=7, fig.width=9, fig.cap="\\label{fig:irf-unrestricted}Orthogonal impulse responses for the unrestricted VAR(2) model"}
+var.irf <- irf(var, n.ahead=60, ortho=TRUE, seed=1729)
+par(mfrow=(c(3,3)), cex.main=1)
+plot(var.irf, plot.type="single")
+```
+
+In Figure \ref{fig:irf-restricted}, we also plot the orthogonal impulse responses for the restricted model estimated in section \ref{restricted}. Remarkably, the results differ greatly from the unrestricted VAR(2) model. Additionally, the bootstrap confidence intervals are clearly larger. Hence, there is more uncertainty in the impulse response analysis when the restricted VAR(2) model is used.
+
+From Figure \ref{fig:irf-restricted}, we can see that the effect of a shock to inflation is still felt after 15 years in every component of the process \( (i_{t}, u_{t}, r_{t}) \). Similar results apply to a shock in the effective Federal Funds rate. The effect of a shock to unemployment seems to diminish as the years pass. However, there is still great uncertainty in this estimate as well.
+
+```{r irf restricted, echo=FALSE, fig.height=7, fig.width=9, fig.cap="\\label{fig:irf-restricted}Orthogonal impulse responses for the restricted VAR(2) model"}
+var.restricted.irf <- irf(var.restricted, n.ahead=60, ortho=TRUE, seed=1729)
+par(mfrow=(c(3,3)), cex.main=1)
+plot(var.restricted.irf, plot.type="single")
+```
+
+\clearpage
+
+# Forecasting with the Estimated VAR Models
+
+We first examine the forecast error variance decomposition (FEVD) for the variables inflation, unemployment and effective Federal Funds rate in the unrestricted VAR(2) model. As explained in the [vars package documentation](https://cran.r-project.org/web/packages/vars/vars.pdf) on page 14, the FEVD allows us to analyse the contribution of variable \( j \) to the \( h \)-step forecast error variance of variable \( k \). The FEVD results can be seen in Figure \ref{fig:fevd}. For variables inflation and unemployment, the variables themselves explain the vast majority of the forecast error variance for many steps into the future. For effective Federal Funds rate, there is already greater contribution from the other two variables starting from step one.
+
+```{r FEVD, echo=FALSE, fig.cap="\\label{fig:fevd}Forecast error variance decomposition for the unrestricted VAR(2) model"}
+f <- fevd(var, n.ahead=17)
+plot(f, plot.type="multiple", addbars=4)
+```
+
+In Figure \ref{fig:forecasts-unrestricted}, we plot forecasts (in blue color) for the unrestricted VAR(2) model estimated in section \ref{unrestricted}. The unrestricted model predicts that inflation and effective Federal Funds rate will rise moderately and unemployment level will decline only slightly, while simultaneously experiencing its normal seasonal variation. 
+
+In Figure \ref{fig:forecasts-restricted}, we plot forecasts (in blue color) for the restricted VAR(2) model estimated in section \ref{restricted}. The forecast of the restricted VAR(2) model is markedly different from the unrestricted VAR(2) model. The restricted VAR(2) model predicts for the forecast period that inflation will remain nearly constant and the effective Federal Funds rate will only slightly rise. However, unemployment is predicted to clearly decline (while simultaneously experiencing its normal seasonal variation).
+
+We plotted forecasts up to 17 lags i.e.\ to the end of the year 2019, even though predicting this far ahead from Q3 2015 might be excessive. This excessiveness can be seen from the fact that, when the forecast step increases, so does the width of the 95 % confidence interval (plotted in red color).
+
+```{r forecasting, echo=FALSE, fig.height=9, fig.width=9, fig.cap="\\label{fig:forecasts-unrestricted}Forecasts for the unrestricted VAR(2) model"}
+var.prd <- predict(var, n.ahead=17, ci=0.95)
+plot(var.prd)
+```
+
+```{r forecast, echo=FALSE, fig.height=9, fig.width=9, fig.cap="\\label{fig:forecasts-restricted}Forecasts for the restricted VAR(2) model"}
+var.restricted.prd <- predict(var.restricted, n.ahead=17, ci=0.95)
+plot(var.restricted.prd)
+```
+
+\clearpage
+
+# References {-}
+
+<div id="refs"></div>
+
+\appendix 
+
+\renewcommand\thesection{\Alph{section}}
+
+# Appendix 
+
+## Information Criteria with Seasonal Dummies \label{dummies}
+
+```{r}
+information_criteria
+```
+
+## Information Criteria without Seasonal Dummies \label{no dummies}
+
+```{r}
+VARselect(multivariate.ts, lag.max=16, type="const")
+```
+
+## Summary of the Unrestricted VAR(2) Model \label{summary unrestricted}
+
+```{r unrestricted, echo=FALSE}
+summary(var)
+```
+
+## Summary of the Restricted VAR(2) Model \label{summary restricted}
+
+```{r restricted, echo=FALSE}
+summary(var.restricted)
+```
+
+## Restrictions for the Likelihood Ratio Test in Section \ref{test English} \label{restrictions}
+
+```{r}
+var.hypothesis$restrictions
+```
