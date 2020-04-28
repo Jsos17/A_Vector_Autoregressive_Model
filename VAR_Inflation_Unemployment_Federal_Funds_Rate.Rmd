@@ -183,7 +183,7 @@ moduli <- roots(var, modulus=TRUE)
 moduli
 ```
 
-The largest modulus of the eigenvalues is `r moduli[1]`. This value is strictly smaller than \( 1 \). Thus, we arrive at the conclusion that our VAR(2) model is stationary.
+The largest modulus of the eigenvalues is `r moduli[1]`. This value is strictly smaller than \( 1 \). Thus, we arrive at the conclusion that our VAR(2) process is stationary.
 
 ### Restricted Model \label{restricted}
 
@@ -240,7 +240,7 @@ moduli2 <- roots(var.restricted, modulus=TRUE)
 moduli2
 ```
 
-The largest value is very close to one. This raises the possibility that our restricted VAR(2) model might not be stationary, since **the estimated value** for the largest modulus of the eigenvalues is so close to \( 1 \). However, we decide to continue with the assumption that our restricted VAR(2) model is stationary.
+The largest value is very close to one. This raises the possibility that our restricted VAR(2) model might not be stationary, since **the estimated value** for the largest modulus of the eigenvalues is so close to \( 1 \). However, we decide to continue with the assumption that our restricted VAR(2) process is stationary.
 
 ## Diagnostic Checking of the Unrestricted Model Using Residual Diagnostics \label{residual diagnostics}
 
