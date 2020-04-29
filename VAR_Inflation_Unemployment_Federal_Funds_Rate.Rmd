@@ -176,7 +176,7 @@ r_{t-2}
 options(digits=7)
 ```
 
-We next examine the stationarity of the estimated VAR(2) model. If \( \boldsymbol{A} \) is the matrix in the VAR(1) representation of our estimated VAR(2) model, then the moduli for all of the eigenvalues of the matrix \( \boldsymbol{A} \) can be examined with the function *roots*:
+We next examine the stationarity of the estimated VAR(2) process. If \( \boldsymbol{A} \) is the matrix in the VAR(1) representation of our estimated VAR(2) model, then the moduli for all of the eigenvalues of the matrix \( \boldsymbol{A} \) can be examined with the function *roots*:
 
 ```{r eigenvalues}
 moduli <- roots(var, modulus=TRUE)
@@ -240,7 +240,7 @@ moduli2 <- roots(var.restricted, modulus=TRUE)
 moduli2
 ```
 
-The largest value is very close to one. This raises the possibility that our restricted VAR(2) model might not be stationary, since **the estimated value** for the largest modulus of the eigenvalues is so close to \( 1 \). However, we decide to continue with the assumption that our restricted VAR(2) process is stationary.
+The largest value is very close to one. This raises the possibility that our restricted VAR(2) process might not be stationary, since **the estimated value** for the largest modulus of the eigenvalues is so close to \( 1 \). However, we decide to continue with the assumption that our restricted VAR(2) process is stationary.
 
 ## Diagnostic Checking of the Unrestricted Model Using Residual Diagnostics \label{residual diagnostics}
 
