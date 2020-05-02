@@ -30,7 +30,7 @@ library(vars)
 
 # Introduction
 
-In this report, we build a vector autoregressive (VAR) model to describe the joint evolvement of three economic time series from the United States. The economic variables considered are inflation, unemployment and effective Federal Funds rate.
+In this report, we build a vector autoregressive (VAR) model to describe the joint evolvement of three economic time series from the United States. The economic variables considered are inflation, unemployment and effective federal funds rate.
 
 The report is part of the coursework for the Master's level statistics course Time series analysis II organized at the University of Helsinki. The theoretical framework of VAR models was provided in the course lectures by Leena Kalliovirta. Additionally, two separate lecture notes have provided further theoretical background for this report [@Saikkonen2012; @Kauppi2016].
 
@@ -40,11 +40,11 @@ The R software package [*vars*](https://cran.r-project.org/web/packages/vars/var
 
 ## Description of Data and Data Preparation \label{description of data}
 
-The original inflation and unemployment time series are reported quarterly, but the effective Federal Funds rate time series is reported monthly. Thus, we aggregate the Federal Funds monthly data to quarterly form by calculating the average value of the months spanning any given quarter and then assigning that value to the given quarter. Additionally, the three time series are not seasonally adjusted. Therefore, we need to take this into account, when we build our vector autoregressive model.
+The original inflation and unemployment time series are reported quarterly, but the effective federal funds rate time series is reported monthly. Thus, we aggregate the federal funds monthly data to quarterly form by calculating the average value of the months spanning any given quarter and then assigning that value to the given quarter. Additionally, the three time series are not seasonally adjusted. Therefore, we need to take this into account, when we build our vector autoregressive model.
 
 We analyse the time span from the first quarter of 1960 (Q1 1960) to the third quarter of 2015 (Q3 2015). For some time series considered, we have more observations than the aforementioned time period. However, we have observations from all three time series between Q1 1960 and Q3 2015. Therefore, we make this time restriction.
 
-On the website of the Federal Reserve Bank of St. Louis, there is an interactive time series graph, where one can observe [the unemployment data](https://fred.stlouisfed.org/series/LRUN64TTUSQ156N) [@oecd2020] and [the effective Federal Funds rate data](https://fred.stlouisfed.org/series/FEDFUNDS) [@fred2020]. From this interactive graph, one can clearly see that references are made to quarters and months in the two respective time series. However, when the data is downloaded, references to quarter and month are made by the first day of the respective time period. This is somewhat misleading. As an example, one would assume that data observed on January 1, 1960, would refer to the last quarter of the year 1959. But in all likelihood the observation date actually refers to the first quarter of the year 1960. In our data analysis, we assume that data observed on the first day of the month refers to the quarter or month *starting* on that date.
+On the website of the Federal Reserve Bank of St. Louis, there is an interactive time series graph, where one can observe [the unemployment data](https://fred.stlouisfed.org/series/LRUN64TTUSQ156N) [@oecd2020] and [the effective federal funds rate data](https://fred.stlouisfed.org/series/FEDFUNDS) [@fred2020]. From this interactive graph, one can clearly see that references are made to quarters and months in the two respective time series. However, when the data is downloaded, references to quarter and month are made by the first day of the respective time period. This is somewhat misleading. As an example, one would assume that data observed on January 1, 1960, would refer to the last quarter of the year 1959. But in all likelihood the observation date actually refers to the first quarter of the year 1960. In our data analysis, we assume that data observed on the first day of the month refers to the quarter or month *starting* on that date.
 
 ## Exploratory Data Analysis
 
@@ -68,7 +68,7 @@ multivariate.ts <- ts.union(inflation.ts, unemployed.ts, fedfunds.ts)
 summary(multivariate.ts)
 ```
 
-The summary statistics do not reveal anything unusual. However, all of the three time series attain values in a similar range. Therefore, we can plot them all together in a single plot. Consequently, we can perhaps attain a better understanding of how the three time series evolve together. This plot can be seen in Figure \ref{fig:single-plot-time-series}. From the joint plot we can see that inflation and Federal Funds rate seem to share similarities in their evolvement process. However, it is very difficult to draw more detailed conclusions from this plot. The three times series are also plotted individually in Figure \ref{fig:time-series-plots}. In particular, the unemployment time series seems to exhibit some seasonal variation.
+The summary statistics do not reveal anything unusual. However, all of the three time series attain values in a similar range. Therefore, we can plot them all together in a single plot. Consequently, we can perhaps attain a better understanding of how the three time series evolve together. This plot can be seen in Figure \ref{fig:single-plot-time-series}. From the joint plot we can see that inflation and federal funds rate seem to share similarities in their evolvement process. However, it is very difficult to draw more detailed conclusions from this plot. The three times series are also plotted individually in Figure \ref{fig:time-series-plots}. In particular, the unemployment time series seems to exhibit some seasonal variation.
 
 ``` {r joint time series plot, echo=FALSE, fig.cap="\\label{fig:single-plot-time-series}Joint time series plot"}
 minimum <- min(inflation.ts, unemployed.ts, fedfunds.ts)
@@ -138,7 +138,7 @@ options(digits=3)
 
 The summary of the estimation results can be seen in Appendix \ref{summary unrestricted}. 
 
-At time \(t\), we denote inflation  with \( i_{t} \), unemployment with \( u_{t} \) and effective Federal Funds rate with \( r_{t} \). Then, our estimated unrestricted VAR(2) model is
+At time \(t\), we denote inflation  with \( i_{t} \), unemployment with \( u_{t} \) and effective federal funds rate with \( r_{t} \). Then, our estimated unrestricted VAR(2) model is
 \begin{equation}
 \begin{bmatrix}
 i_{t} \\
@@ -244,7 +244,7 @@ The largest value is very close to one. This raises the possibility that our res
 
 ## Diagnostic Checking of the Unrestricted Model Using Residual Diagnostics \label{residual diagnostics}
 
-In this section we evaluate the estimated unrestricted VAR(2) model using residual diagnostics. We first plot the residual series and the autocorrelation function for the residuals. The vars package provides handy functionality for this purpose. In Figure \ref{fig:inflation-diagnostics}, we see the residuals for inflation time series. There seems to be some indication of the variance not being constant. Additionally, there is significant autocorrelation for some lags. In Figure \ref{fig:unemployment-diagnostics}, the residuals of the unemployment times series are plotted. We arrive at similar conclusions than in the case of the residuals for the inflation time series. In Figure \ref{fig:fedfunds-diagnostics}, the residuals are plotted for the effective Federal Funds rate time series. Again, similar conclusions as before can be drawn. Our three plots suggest that we should conduct various tests for the residuals. 
+In this section we evaluate the estimated unrestricted VAR(2) model using residual diagnostics. We first plot the residual series and the autocorrelation function for the residuals. The vars package provides handy functionality for this purpose. In Figure \ref{fig:inflation-diagnostics}, we see the residuals for inflation time series. There seems to be some indication of the variance not being constant. Additionally, there is significant autocorrelation for some lags. In Figure \ref{fig:unemployment-diagnostics}, the residuals of the unemployment times series are plotted. We arrive at similar conclusions than in the case of the residuals for the inflation time series. In Figure \ref{fig:fedfunds-diagnostics}, the residuals are plotted for the effective federal funds rate time series. Again, similar conclusions as before can be drawn. Our three plots suggest that we should conduct various tests for the residuals.
 
 ```{r, echo=FALSE,fig.height=7, fig.width=9, fig.cap="\\label{fig:inflation-diagnostics}Diagnostic plots for residuals of inflation time series"}
 use_lag <- 24
@@ -255,7 +255,7 @@ plot(var, names="inflation.ts", lag.acf=use_lag, lag.pacf=use_lag)
 plot(var, names="unemployed.ts", lag.acf=use_lag, lag.pacf=use_lag)
 ```
 
-```{r, echo=FALSE, fig.height=7, fig.width=9, fig.cap="\\label{fig:fedfunds-diagnostics}Diagnostic plots for residuals of effective Federal Funds rate time series"}
+```{r, echo=FALSE, fig.height=7, fig.width=9, fig.cap="\\label{fig:fedfunds-diagnostics}Diagnostic plots for residuals of effective federal funds rate time series"}
 plot(var, names="fedfunds.ts", lag.acf=use_lag, lag.pacf=use_lag)
 ```
 
@@ -308,9 +308,9 @@ Based on residual diagnostics, we have strong reason to believe that the error p
 
 ## Testing Restrictions Based on the Analysis from the English Lecture Material \label{test English}
 
-In the English lecture material *Financial Time Series Econometrics: Part 2: Multivariate and Nonstationary Time Series* [@Kauppi2016], inflation, unemployment and effective Federal Funds rate data was also analysed and VAR models were built to describe the dynamics of the three respective time series. However, the inflation data was different. Additionally, there is reason to believe that the unemployment data used in the English lecture material is seasonally adjusted, since its time series plot looks distinctly smooth.
+In the English lecture material *Financial Time Series Econometrics: Part 2: Multivariate and Nonstationary Time Series* [@Kauppi2016], inflation, unemployment and effective federal funds rate data was also analysed and VAR models were built to describe the dynamics of the three respective time series. However, the inflation data was different. Additionally, there is reason to believe that the unemployment data used in the English lecture material is seasonally adjusted, since its time series plot looks distinctly smooth.
 
-In the English lecture material in the section considering Granger causality, a restricted VAR(2) model is proposed based on lack of Granger causality. It was proposed that unemployment does not Granger cause inflation, effective Federal Funds rate does not Granger cause inflation and unemployment does not Granger cause effective Federal Funds rate. The corresponding restrictions to zero were placed on coefficients \( a_{12,k}, a_{13,k} \text{ and } a_{32,k} \) of the coefficient matrices \( A_{k} \) for \( k \in \{ 1,2 \} \). Thus, our null hypothesis is \[ H_{0} : \begin{cases}a_{12,k} = 0 \\ a_{13,k} = 0 \\ a_{32,k} = 0 \end{cases}, \text{ for } k \in \{ 1, 2 \}. \]
+In the English lecture material in the section considering Granger causality, a restricted VAR(2) model is proposed based on lack of Granger causality. It was proposed that unemployment does not Granger cause inflation, effective federal funds rate does not Granger cause inflation and unemployment does not Granger cause effective federal funds rate. The corresponding restrictions to zero were placed on coefficients \( a_{12,k}, a_{13,k} \text{ and } a_{32,k} \) of the coefficient matrices \( A_{k} \) for \( k \in \{ 1,2 \} \). Thus, our null hypothesis is \[ H_{0} : \begin{cases}a_{12,k} = 0 \\ a_{13,k} = 0 \\ a_{32,k} = 0 \end{cases}, \text{ for } k \in \{ 1, 2 \}. \]
 
 With the vars package we first estimate the model with these restrictions:
 
@@ -391,13 +391,13 @@ c5$Granger
 c6$Granger
 ```
 
-If we use significance level of 5 %, then we would have Granger causality between all possible partitions of the vector  \( (i_{t}, u_{t}, r_{t}) \). Even for significance level of 1 %, we can only say that the effective Federal Funds rate does not Granger cause inflation **and** unemployment, but all other null hypotheses are still rejected. Based on this analysis, we do not seem to have great justification to say that there is an absence of Granger causality between any partitions of the vector \( (i_{t}, u_{t}, r_{t}) \).
+If we use significance level of 5 %, then we would have Granger causality between all possible partitions of the vector  \( (i_{t}, u_{t}, r_{t}) \). Even for significance level of 1 %, we can only say that the effective federal funds rate does not Granger cause inflation **and** unemployment, but all other null hypotheses are still rejected. Based on this analysis, we do not seem to have great justification to say that there is an absence of Granger causality between any partitions of the vector \( (i_{t}, u_{t}, r_{t}) \).
 
 # Impulse Response Analysis
 
 Our estimation results for the unrestricted and restricted VAR(2) models suggest that the covariance matrix of the error process is not diagonal i.e.\ the there is instantaneous correlation between the error process components (see Appendix \ref{summary unrestricted} and Appendix \ref{summary restricted}). Therefore, we use orthogonal impulse responses to better capture the effect of an impulse in an individual component of the error process. We will examine the orthogonal impulse responses for 60 lags ahead. In other words, we examine the effect of a shock in one of the components of the process \( (i_{t}, u_{t}, r_{t}) \) for the 15 years following the shock.
 
-The orthogonal impulse responses for the unrestricted model are plotted in Figure \ref{fig:irf-unrestricted}. For shocks in inflation, the effect initially intensifies, but then gradually fades until it has no impact or very little impact after 15 years. For shocks in unemployment, the effect of the shock is no longer felt after 15 years. For shocks in the effective Federal Funds rate, the effect is somewhat similar to an inflation shock.
+The orthogonal impulse responses for the unrestricted model are plotted in Figure \ref{fig:irf-unrestricted}. For shocks in inflation, the effect initially intensifies, but then gradually fades until it has no impact or very little impact after 15 years. For shocks in unemployment, the effect of the shock is no longer felt after 15 years. For shocks in the effective federal funds rate, the effect is somewhat similar to an inflation shock.
 
 ```{r irf unrestricted, echo=FALSE, fig.height=7, fig.width=9, fig.cap="\\label{fig:irf-unrestricted}Orthogonal impulse responses for the unrestricted VAR(2) model"}
 var.irf <- irf(var, n.ahead=60, ortho=TRUE, seed=1729)
@@ -407,7 +407,7 @@ plot(var.irf, plot.type="single")
 
 In Figure \ref{fig:irf-restricted}, we also plot the orthogonal impulse responses for the restricted model estimated in section \ref{restricted}. Remarkably, the results differ greatly from the unrestricted VAR(2) model. Additionally, the bootstrap confidence intervals are clearly larger. Hence, there is more uncertainty in the impulse response analysis when the restricted VAR(2) model is used.
 
-From Figure \ref{fig:irf-restricted}, we can see that the effect of a shock to inflation is still felt after 15 years in every component of the process \( (i_{t}, u_{t}, r_{t}) \). Similar results apply to a shock in the effective Federal Funds rate. The effect of a shock to unemployment seems to diminish as the years pass. However, there is still great uncertainty in this estimate as well.
+From Figure \ref{fig:irf-restricted}, we can see that the effect of a shock to inflation is still felt after 15 years in every component of the process \( (i_{t}, u_{t}, r_{t}) \). Similar results apply to a shock in the effective federal funds rate. The effect of a shock to unemployment seems to diminish as the years pass. However, there is still great uncertainty in this estimate as well.
 
 ```{r irf restricted, echo=FALSE, fig.height=7, fig.width=9, fig.cap="\\label{fig:irf-restricted}Orthogonal impulse responses for the restricted VAR(2) model"}
 var.restricted.irf <- irf(var.restricted, n.ahead=60, ortho=TRUE, seed=1729)
@@ -419,16 +419,16 @@ plot(var.restricted.irf, plot.type="single")
 
 # Forecasting with the Estimated VAR Models
 
-We first examine the forecast error variance decomposition (FEVD) for the variables inflation, unemployment and effective Federal Funds rate in the unrestricted VAR(2) model. As explained in the [vars package documentation](https://cran.r-project.org/web/packages/vars/vars.pdf) on page 14, the FEVD allows us to analyse the contribution of variable \( j \) to the \( h \)-step forecast error variance of variable \( k \). The FEVD results can be seen in Figure \ref{fig:fevd}. For variables inflation and unemployment, the variables themselves explain the vast majority of the forecast error variance for many steps into the future. For effective Federal Funds rate, there is already greater contribution from the other two variables starting from step one.
+We first examine the forecast error variance decomposition (FEVD) for the variables inflation, unemployment and effective federal funds rate in the unrestricted VAR(2) model. As explained in the [vars package documentation](https://cran.r-project.org/web/packages/vars/vars.pdf) on page 14, the FEVD allows us to analyse the contribution of variable \( j \) to the \( h \)-step forecast error variance of variable \( k \). The FEVD results can be seen in Figure \ref{fig:fevd}. For variables inflation and unemployment, the variables themselves explain the vast majority of the forecast error variance for many steps into the future. For effective federal funds rate, there is already greater contribution from the other two variables starting from step one.
 
 ```{r FEVD, echo=FALSE, fig.cap="\\label{fig:fevd}Forecast error variance decomposition for the unrestricted VAR(2) model"}
 f <- fevd(var, n.ahead=17)
 plot(f, plot.type="multiple", addbars=4)
 ```
 
-In Figure \ref{fig:forecasts-unrestricted}, we plot forecasts (in blue color) for the unrestricted VAR(2) model estimated in section \ref{unrestricted}. The unrestricted model predicts that inflation and effective Federal Funds rate will rise moderately and unemployment level will decline only slightly, while simultaneously experiencing its normal seasonal variation. 
+In Figure \ref{fig:forecasts-unrestricted}, we plot forecasts (in blue color) for the unrestricted VAR(2) model estimated in section \ref{unrestricted}. The unrestricted model predicts that inflation and effective federal funds rate will rise moderately and unemployment level will decline only slightly, while simultaneously experiencing its normal seasonal variation.
 
-In Figure \ref{fig:forecasts-restricted}, we plot forecasts (in blue color) for the restricted VAR(2) model estimated in section \ref{restricted}. The forecast of the restricted VAR(2) model is markedly different from the unrestricted VAR(2) model. The restricted VAR(2) model predicts for the forecast period that inflation will remain nearly constant and the effective Federal Funds rate will only slightly rise. However, unemployment is predicted to clearly decline (while simultaneously experiencing its normal seasonal variation).
+In Figure \ref{fig:forecasts-restricted}, we plot forecasts (in blue color) for the restricted VAR(2) model estimated in section \ref{restricted}. The forecast of the restricted VAR(2) model is markedly different from the unrestricted VAR(2) model. The restricted VAR(2) model predicts for the forecast period that inflation will remain nearly constant and the effective federal funds rate will only slightly rise. However, unemployment is predicted to clearly decline (while simultaneously experiencing its normal seasonal variation).
 
 We plotted forecasts up to 17 lags i.e.\ to the end of the year 2019, even though predicting this far ahead from Q3 2015 might be excessive. This excessiveness can be seen from the fact that, when the forecast step increases, so does the width of the 95 % confidence interval (plotted in red color).
 
