@@ -110,16 +110,16 @@ In this section we build an unrestricted VAR model and then also consider a VAR 
 
 ## Model Selection Using Information Criteria
 
-We will use information criteria to select the lag order of our unrestricted VAR model. The vars package provides the function *VARselect* for this purpose. Since the original data is not seasonally adjusted and we are dealing with macroeconomic data, we add seasonal dummies. The *VARselect* function computes the lag orders recommended by each information criteria:
+We will use information criteria to select the lag order of our unrestricted VAR model. The vars package provides the function *VARselect* for this purpose. Since the original data is not seasonally adjusted and we are dealing with macroeconomic data, we add seasonal dummies. The *VARselect* function computes the lag orders recommended by each information criterion:
 
 ```{r}
 information_criteria <- VARselect(multivariate.ts, lag.max=16, type="const", season=4)
 information_criteria$selection
 ```
 
-From the results we can see that the most stringent information criteria SC, i.e. the Schwartz information criteria (BIC in the lecture materials), recommends lag order of two. We choose our lag order to be two, because we want to estimate a model with as few parameters as possible. More detailed calculations for different information criteria can be seen in Appendix \ref{dummies}.
+From the results we can see that the most stringent information criterion SC, i.e.\ the Schwartz information criterion (also known as the Bayesian information criterion, BIC), recommends lag order of two. We choose our lag order to be two, because we want to estimate a model with as few parameters as possible. More detailed calculations for different information criteria can be seen in Appendix \ref{dummies}.
 
-In Appendix \ref{no dummies}, we see what would have been the suggested lag order, if seasonal dummies were not used. In that case, we would have estimated a VAR(6) model, when using the SC criterion. Thus, the addition of seasonal dummies dramatically reduces lag order of our estimated model.
+In Appendix \ref{no dummies}, we see what would have been the suggested lag order if seasonal dummies were not used. In that case, we would have estimated a VAR(6) model based on the SC criterion. Thus, the addition of seasonal dummies dramatically reduces lag order of our estimated model.
 
 ## VAR(2) Model Estimation \label{Model}
 
