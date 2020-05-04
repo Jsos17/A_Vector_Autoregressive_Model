@@ -357,7 +357,7 @@ In this section, we conduct a likelihood ratio test for the restricted VAR(2) mo
 var.restricted$restrictions
 ```
 
-In total 14 coefficients were restricted to zero. Thus the \( LR \) test statistic is asymptotically \( \chi_{14}^{2} \)-distributed. Our null hypothesis is that those 14 coefficients are zero. We obtain the following results:
+In total, 14 coefficients were restricted to zero. Thus, the \( LR \) test statistic is asymptotically \( \chi_{14}^{2} \)-distributed. Our null hypothesis is that those 14 coefficients are zero. We obtain the following results:
 
 ```{r}
 log_restricted <- logLik(var.restricted)
