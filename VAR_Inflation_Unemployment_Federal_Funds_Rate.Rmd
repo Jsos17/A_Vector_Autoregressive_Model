@@ -430,7 +430,7 @@ In Figure \ref{fig:forecasts-unrestricted}, we plot forecasts (in blue color) fo
 
 In Figure \ref{fig:forecasts-restricted}, we plot forecasts (in blue color) for the restricted VAR(2) model estimated in section \ref{restricted}. The forecast of the restricted VAR(2) model is markedly different from the unrestricted VAR(2) model. The restricted VAR(2) model predicts for the forecast period that inflation will remain nearly constant and the effective federal funds rate will only slightly rise. However, unemployment is predicted to clearly decline (while simultaneously experiencing its normal seasonal variation).
 
-We plotted forecasts up to 17 lags i.e.\ to the end of the year 2019, even though predicting this far ahead from Q3 2015 might be excessive. This excessiveness can be seen from the fact that, when the forecast step increases, so does the width of the 95 % confidence interval (plotted in red color).
+We plotted forecasts up to 17 lags i.e.\ to the end of the year 2019, even though predicting this far ahead from Q3 2015 might be excessive. This excessiveness can be seen from the fact that, when the forecast step increases, so does the width of the 95 % forecast confidence interval (plotted in red color).
 
 ```{r forecasting, echo=FALSE, fig.height=9, fig.width=9, fig.cap="\\label{fig:forecasts-unrestricted}Forecasts for the unrestricted VAR(2) model"}
 var.prd <- predict(var, n.ahead=17, ci=0.95)
