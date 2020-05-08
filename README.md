@@ -1,5 +1,5 @@
-# Time Series Analysis II Coursework 
+# A Vector Autoregressive Model
 
-## Modelling the development of inflation, unemployment and effective Federal Funds rate with vector autoregression
+A vector autoregressive model was built as a part of the coursework for a course considering multivariate time series analysis. The coursework is published with permission from the course lecturer Leena Kalliovirta.
 
-This repository contains the coursework for the Master's level statistics course Time series analysis II organized at the University of Helsinki.
+The [PDFreport](output/VAR_Inflation_Unemployment_Federal_Funds_Rate.pdf) and the [R Markdown file](VAR_Inflation_Unemployment_Federal_Funds_Rate.Rmd). 
