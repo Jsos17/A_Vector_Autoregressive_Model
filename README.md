@@ -1,5 +1,8 @@
 # A Vector Autoregressive Model
 
-A vector autoregressive model was built as a part of the coursework for a course considering multivariate time series analysis. The coursework is published with permission from the course lecturer Leena Kalliovirta.
+This repository contains the coursework for a multivariate time series analysis course. The coursework consists of building a vector autoregressive model. The coursework is published with permission from the course lecturer Leena Kalliovirta.
 
-The [PDF report](output/VAR_Inflation_Unemployment_Federal_Funds_Rate.pdf) and the [R Markdown file](VAR_Inflation_Unemployment_Federal_Funds_Rate.Rmd). 
+The coursework:
+
+- [PDF report](output/VAR_Inflation_Unemployment_Federal_Funds_Rate.pdf)
+- [R Markdown document](VAR_Inflation_Unemployment_Federal_Funds_Rate.Rmd)
