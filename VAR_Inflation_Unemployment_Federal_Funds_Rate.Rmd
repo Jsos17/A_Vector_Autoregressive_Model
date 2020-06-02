@@ -1,6 +1,6 @@
 ---
 title: "Time Series Analysis II Coursework"
-subtitle: "Modelling the Development of Inflation, Unemployment and Effective Federal Funds Rate with Vector Autoregression"
+subtitle: "Modelling the Development of Inflation, Unemployment and Effective Federal Funds Rate With Vector Autoregression"
 author: "Juuso Silvennoinen"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
