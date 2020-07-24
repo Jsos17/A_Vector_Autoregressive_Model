@@ -4,5 +4,5 @@ This repository contains the coursework for a multivariate time series analysis 
 
 The coursework:
 
-- [PDF report](output/VAR_Inflation_Unemployment_Federal_Funds_Rate.pdf)
+- [PDF report](VAR_Inflation_Unemployment_Federal_Funds_Rate.pdf)
 - [R Markdown document](VAR_Inflation_Unemployment_Federal_Funds_Rate.Rmd)

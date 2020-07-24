@@ -10,9 +10,6 @@ output:
 bibliography: references.bib
 csl: harvard-educational-review.csl
 urlcolor: blue
-knit: (function(inputFile, encoding) {
-  rmarkdown::render(inputFile, encoding = encoding,
-  output_dir = "output", output_format = "all") })
 ---
 
 ```{r setup, include=FALSE}
@@ -51,9 +48,9 @@ On the website of the Federal Reserve Bank of St. Louis, there is an interactive
 We first examine the summary statistics describing the three time series considered:
 
 ```{r data preparation, echo=FALSE}
-inflation <-read.csv("Inflation_1959_Q4-2015_Q4.csv")
-unemployed <- read.csv("Unemployment_1960_Q1-2015_Q4.csv")
-fedfunds <- read.csv("Federal_Funds_Rate_1959_12-2015_11.csv")
+inflation <-read.csv("data/Inflation_1959_Q4-2015_Q4.csv")
+unemployed <- read.csv("data/Unemployment_1960_Q1-2015_Q4.csv")
+fedfunds <- read.csv("data/Federal_Funds_Rate_1959_12-2015_11.csv")
 
 inflation <- subset(inflation, select=c("QUARTER", "INFLATION"))
 inflation <- inflation[2:(nrow(inflation) - 1),]
