@@ -27,7 +27,7 @@ p <- plot_ly(x = df$Quarter) %>%
             text = paste(hovertime, df$Inflation, sep=": "), hoverinfo = "text") %>%
   add_lines(y = df$Unemployment, color=I("red"), name = "Unemployment Rate",
             text = paste(hovertime, df$Unemployment, sep=": "), hoverinfo = "text") %>%
-  add_lines(y = df$Fed_funds, color=I("darkgreen"), name = "Effective Federal Funds Rate (%)",
+  add_lines(y = df$Fed_funds, color=I("darkgreen"), name = "Effective Federal Funds Rate",
             text = paste(hovertime, df$Fed_funds, sep=": "), hoverinfo = "text") %>%
   rangeslider() %>%
   layout(title = "Interactive Time Series Plot", yaxis=list(title = "Percent"))
