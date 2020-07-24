@@ -2,6 +2,8 @@
 
 This repository contains the coursework for a multivariate time series analysis course. The coursework consists of building a vector autoregressive (VAR) model. The coursework is published with permission from the course lecturer Leena Kalliovirta.
 
+**UPDATE:** An interactive time series visualization is now available at https://jsos17.github.io/A_Vector_Autoregressive_Model/. The interactive visualization is made with Plotly R.
+
 ## The VAR Model Is Fitted Using the Approach of Traditional Statistics
 
 In traditional time series analysis the focus is more on finding (causal) relationships between the variables and not so much on prediction. Therefore, we use the traditional statistics approach, i.e. the whole dataset is used to fit the vector autoregressive model.
@@ -12,3 +14,7 @@ The traditional approach is in stark contrast to the machine learning approach o
 
 - [PDF report](VAR_Inflation_Unemployment_Federal_Funds_Rate.pdf)
 - [R Markdown document](VAR_Inflation_Unemployment_Federal_Funds_Rate.Rmd)
+
+## Interactive Visualizations
+
+[Interactive time series plot made with Plotly R](https://jsos17.github.io/A_Vector_Autoregressive_Model/)
