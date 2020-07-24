@@ -17,4 +17,4 @@ The traditional approach is in stark contrast to the machine learning approach o
 
 ## Interactive Visualizations
 
-[Interactive time series plot made with Plotly R](https://jsos17.github.io/A_Vector_Autoregressive_Model/)
+- [Interactive time series plot made with Plotly R](https://jsos17.github.io/A_Vector_Autoregressive_Model/)
