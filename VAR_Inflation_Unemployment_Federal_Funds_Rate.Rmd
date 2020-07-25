@@ -48,18 +48,12 @@ On the website of the Federal Reserve Bank of St. Louis, there is an interactive
 We first examine the summary statistics describing the three time series considered:
 
 ```{r data preparation, echo=FALSE}
-inflation <-read.csv("data/Inflation_1959_Q4-2015_Q4.csv")
-unemployed <- read.csv("data/Unemployment_1960_Q1-2015_Q4.csv")
-fedfunds <- read.csv("data/Federal_Funds_Rate_1959_12-2015_11.csv")
+source("R/time_series_utils.R")
 
-inflation <- subset(inflation, select=c("QUARTER", "INFLATION"))
-inflation <- inflation[2:(nrow(inflation) - 1),]
-unemployed <- unemployed[1:(nrow(unemployed) - 1),]
-fedfunds <- fedfunds[2:670,]
-
-inflation.ts <- ts(inflation$INFLATION, start=c(1960,1), frequency=4)
-unemployed.ts <- ts(unemployed$LRUN64TTUSQ156N, start=c(1960,1), frequency=4)
-fedfunds.ts <- aggregate(ts(fedfunds$FEDFUNDS, start=c(1960,1), frequency=12), FUN=mean, nfrequency=4)
+lst <- create_time_series()
+inflation.ts <- lst[[1]]
+unemployed.ts <- lst[[2]]
+fedfunds.ts <- lst[[3]]
 
 multivariate.ts <- ts.union(inflation.ts, unemployed.ts, fedfunds.ts)
 summary(multivariate.ts)
