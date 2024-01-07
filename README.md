@@ -1,6 +1,6 @@
 # A Vector Autoregressive Model
 
-This repository contains the coursework for a multivariate time series analysis course. The coursework consists of building a vector autoregressive (VAR) model. The coursework is published with permission from the course lecturer Leena Kalliovirta.
+This repository contains my coursework for a multivariate time series analysis course. The coursework consists of building a vector autoregressive (VAR) model.
 
 The focus here is on finding (causal) relationships between the variables and building an explanatory model for the observed data. Therefore, the whole dataset is used to fit the vector autoregressive model and as a consequence the accuracy of the predictions might be affected. The quality of the predictions is also not evaluated in any way.
 
